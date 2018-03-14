@@ -556,7 +556,7 @@ def message():
 		msg="failed"
 		if emailid==reciever:
 			return jsonify(msg="Cannot send message to yourself")
-		with sqlite3.connect("tinder.db") as con:
+		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
 			cur.execute("SELECT EmailID from Users where EmailID=?",(reciever,))
 			chk=cur.fetchone()
@@ -598,7 +598,7 @@ def messageDelete():
 		if chk==False:
 			return jsonify(msg='invalid emailid')
 		msg="failed"
-		with sqlite3.connect("tinder.db") as con:
+		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
 			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
 			chk = cur.fetchone()
@@ -646,7 +646,7 @@ def block():
 		msg="failed"
 		if emailid==block:
 			return jsonify(msg="Cannot block yourself")
-		with sqlite3.connect("tinder.db") as con:
+		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
 			cur.execute("SELECT EmailID from Users where EmailID=?",(block,))
 			chk=cur.fetchone()
@@ -682,7 +682,7 @@ def unblock():
 		msg="failed"
 		if emailid==unblock:
 			return jsonify(msg="Cannot block or unblock yourself")
-		with sqlite3.connect("tinder.db") as con:
+		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
 			cur.execute("SELECT EmailID from Users where EmailID=?",(unblock,))
 			chk=cur.fetchone()
