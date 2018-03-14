@@ -572,7 +572,6 @@ def message():
 				ub=cur.fetchall()
 				cur.execute("SELECT block from Block where block=?",(emailid,))
 				rb=cur.fetchall()
-				print ub,rb
 				if ub!=[]:
 					if reciever in ub[0]:
 						return jsonify(msg="You have blocked the user")
@@ -609,7 +608,6 @@ def messageDelete():
 				timer=time.ctime()
 				cur.execute("SELECT deletion,recipient,sender from message where messageID=? and message=?",(messageID,message))
 				chk=cur.fetchone()
-				print chk
 				if chk==None:
 					return jsonify(msg="check for appropriate messageID and message")
 				if emailid in chk:
