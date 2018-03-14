@@ -1,8 +1,10 @@
-from src import app
-from flask import request,abort,jsonify,send_file,redirect, url_for
+from flask import Flask,request,abort,jsonify,send_file,redirect,url_for,render_template
 import requests,json,re,random,string
 import sqlite3,os
 from werkzeug.utils import secure_filename
+import time
+
+app=Flask(__name__)
 
 #app.debug=True #remove on production
 
@@ -20,6 +22,15 @@ print ("Table profile ok")
 #conn.execute('drop table if exists love')#remove on prod
 conn.execute('CREATE TABLE IF NOT EXISTS love (email TEXT , target TEXT , opinion INT , match TEXT)')
 print ("Table love ok")
+
+conn.execute('CREATE TABLE IF NOT EXISTS Message (sender TEXT , recipient TEXT, time INT, message TEXT, deletion TEXT, messageID INTEGER PRIMARY KEY AUTOINCREMENT)')
+print ("Table message ok")
+
+conn.execute('CREATE TABLE IF NOT EXISTS MessCon (user TEXT , contact TEXT)')
+print ("Table MessCon ok")
+
+conn.execute('CREATE TABLE IF NOT EXISTS Block (user TEXT , block TEXT)')
+print ("Table Block ok")
 
 conn.close()
 
@@ -72,7 +83,11 @@ def deny():
 @app.route('/love')
 def love():
 	return jsonify(love="megha")
-			
+
+@app.route('/uploadpictest')
+def uploadpictest():
+	return render_template("test.html")
+	
 @app.errorhandler(404)
 def err(error):
 	return "url mismatch, may be a typo"
@@ -261,7 +276,7 @@ def upload():
 def image():
 	try:
 		emailid=request.values.get('emailid')
-		print (emailid)
+		print(emailid)
 		filename=str((emailid.split('@'))[0])
 		for name in os.listdir('images'):
 			if filename in name:
@@ -505,7 +520,6 @@ def matches():
 	except:
 		return jsonify(msg="Error in api request")
 
-
 @app.route('/delete', methods= ['GET', 'POST'])
 def delete():
 	try:
@@ -528,3 +542,171 @@ def delete():
 		return jsonify(msg="db error")
 	except:
 		return jsonify(msg="Account deletion failed")
+
+@app.route('/message', methods= ['GET', 'POST'])
+def message():
+	try:
+		sessionid=request.values.get('sessionid')
+		emailid=request.values.get('emailid')
+		reciever=request.values.get('reciever')
+		message=request.values.get('message')		
+		chk=isValidEmail(emailid) and isValidEmail(reciever)
+		if chk==False:
+			return jsonify(msg='invalid emailid or invalid recipient')
+		msg="failed"
+		if emailid==reciever:
+			return jsonify(msg="Cannot send message to yourself")
+		with sqlite3.connect("tinder.db") as con:
+			cur = con.cursor()
+			cur.execute("SELECT EmailID from Users where EmailID=?",(reciever,))
+			chk=cur.fetchone()
+			if chk==None:
+				return jsonify(msg="recipient is not registered")
+			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
+			chk = cur.fetchone()
+			if chk==None:
+				return jsonify(msg="Emailid not registered")
+			if chk[0] == sessionid :
+				timer=time.ctime()
+				cur.execute("SELECT block from Block where user=?",(emailid,))
+				ub=cur.fetchall()
+				cur.execute("SELECT block from Block where block=?",(emailid,))
+				rb=cur.fetchall()
+				print ub,rb
+				if ub!=[]:
+					if reciever in ub[0]:
+						return jsonify(msg="You have blocked the user")
+				if rb!=[]:
+					if emailid in rb[0]:
+						return jsonify(msg="Recipient has blocked you")
+				cur.execute("INSERT INTO message (sender,recipient,time,message) VALUES (?,?,?,?)",(emailid,reciever,timer,message))
+				con.commit()
+				msg = "message recieved from " + emailid  + " to " + reciever
+				return jsonify(msg=msg)
+			else:
+				return jsonify(msg="Account is not registered with this emailId or invalid sessionid")				
+	except:
+		return jsonify(msg="Error in api request")
+		
+@app.route('/messageDelete', methods= ['GET', 'POST'])
+def messageDelete():
+	try:
+		sessionid=request.values.get('sessionid')
+		emailid=request.values.get('emailid')
+		messageID=request.values.get('messageID')
+		message=request.values.get('message')		
+		chk=isValidEmail(emailid)
+		if chk==False:
+			return jsonify(msg='invalid emailid')
+		msg="failed"
+		with sqlite3.connect("tinder.db") as con:
+			cur = con.cursor()
+			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
+			chk = cur.fetchone()
+			if chk==None:
+				return jsonify(msg="Emailid not registered")
+			if chk[0] == sessionid :
+				timer=time.ctime()
+				cur.execute("SELECT deletion,recipient,sender from message where messageID=? and message=?",(messageID,message))
+				chk=cur.fetchone()
+				print chk
+				if chk==None:
+					return jsonify(msg="check for appropriate messageID and message")
+				if emailid in chk:
+					pass
+				else:
+					return jsonify("Message is not associated with this emailid")
+				if chk[0]==None:
+					info=emailid
+					cur.execute("UPDATE message SET deletion = ? WHERE messageID = ?",(info,messageID))
+					con.commit()
+					msg = "message deleted for " + emailid
+					return jsonify(msg=msg)
+				if chk[0]==emailid:
+					return jsonify(msg="message is already deleted for you")
+				elif chk[0]==chk[1] or chk[0]==chk[2]:
+					cur.execute("DELETE from message WHERE messageID = ?",(messageID,))
+					msg = "message deleted for " + emailid
+					return jsonify(msg=msg)
+				con.commit()
+				msg = "message deleted for " + emailid
+				return jsonify(msg=msg)
+			else:
+				return jsonify(msg="Account is not registered with this emailId or invalid sessionid")				
+	except:
+		return jsonify(msg="Error in api request")
+
+@app.route('/block', methods= ['GET', 'POST'])
+def block():
+	try:
+		sessionid=request.values.get('sessionid')
+		emailid=request.values.get('emailid')
+		block=request.values.get('block')
+		chk=isValidEmail(emailid) and isValidEmail(block)
+		if chk==False:
+			return jsonify(msg='invalid emailid or invalid recipient')
+		msg="failed"
+		if emailid==block:
+			return jsonify(msg="Cannot block yourself")
+		with sqlite3.connect("tinder.db") as con:
+			cur = con.cursor()
+			cur.execute("SELECT EmailID from Users where EmailID=?",(block,))
+			chk=cur.fetchone()
+			if chk==None:
+				return jsonify(msg="recipient is not registered")
+			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
+			chk = cur.fetchone()
+			if chk==None:
+				return jsonify(msg="Emailid not registered")
+			if chk[0] == sessionid :
+				cur.execute("SELECT block from Block where user=? and block=?",(emailid,block))
+				chk=cur.fetchone()
+				if chk is None:
+					cur.execute("INSERT INTO Block (user,block) VALUES (?,?)",(emailid,block))
+					return jsonify(msg="You have blocked the user")
+				else:
+					return jsonify(msg="You have already blocked the user")
+				con.commit()
+			else:
+				return jsonify(msg="Account is not registered with this emailId or invalid sessionid")				
+	except:
+		return jsonify(msg="Error in api request")
+
+@app.route('/unblock', methods= ['GET', 'POST'])
+def unblock():
+	try:
+		sessionid=request.values.get('sessionid')
+		emailid=request.values.get('emailid')
+		unblock=request.values.get('unblock')
+		chk=isValidEmail(emailid) and isValidEmail(unblock)
+		if chk==False:
+			return jsonify(msg='invalid emailid or invalid recipient')
+		msg="failed"
+		if emailid==unblock:
+			return jsonify(msg="Cannot block or unblock yourself")
+		with sqlite3.connect("tinder.db") as con:
+			cur = con.cursor()
+			cur.execute("SELECT EmailID from Users where EmailID=?",(unblock,))
+			chk=cur.fetchone()
+			if chk==None:
+				return jsonify(msg="recipient is not registered")
+			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
+			chk = cur.fetchone()
+			if chk==None:
+				return jsonify(msg="Emailid not registered")
+			if chk[0] == sessionid :
+				cur.execute("SELECT block from Block where user=? and block=?",(emailid,unblock))
+				chk=cur.fetchone()
+				if chk is not None:
+					cur.execute("DELETE from Block WHERE user = ? and block=?",(emailid,unblock))
+					return jsonify(msg="You have unblocked the user")
+				else:
+					return jsonify(msg="You have not blocked the user")
+				con.commit()
+			else:
+				return jsonify(msg="Account is not registered with this emailId or invalid sessionid")				
+	except:
+		return jsonify(msg="Error in api request")
+
+if __name__ == '__main__':
+	app.run(debug=True,port=8080)
