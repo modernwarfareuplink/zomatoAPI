@@ -66,6 +66,11 @@ def isValidAge(age):
 		return True
 	return False
 
+def isValidSession(sessionid):
+if len(sessionid)==12:
+	return True
+return False
+
 UPLOAD_FOLDER = '/images'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -157,9 +162,9 @@ def profile():
 		lookingfor=request.values.get('lookingfor')
 		about=request.values.get('about')
 		age=int(age)
-		chk=isValidEmail(emailid) and isValidAge(age) and isValidName(name)
+		chk=isValidEmail(emailid) and isValidAge(age) and isValidName(name) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid or age or name')
+			return jsonify(msg='invalid emailid or age or name or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -192,9 +197,9 @@ def getprofileinfo():
 	try:
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -217,9 +222,9 @@ def suggest():
 	try:
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -246,9 +251,9 @@ def upload():
 		if request.method == "POST":
 			emailid=request.values.get('emailid')
 			sessionid=request.values.get('sessionid')
-			chk=isValidEmail(emailid)
+			chk=isValidEmail(emailid) and isValidSession(sessionid)
 			if chk==False:
-				return jsonify(msg='invalid emailid')
+				return jsonify(msg='invalid emailid or sessionid')
 			with sqlite3.connect("Tinder.db") as con:
 				cur = con.cursor()
 				cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
@@ -314,9 +319,9 @@ def allusers():
 	try:
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -339,9 +344,9 @@ def logout():
 	try:
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -368,9 +373,9 @@ def profilechange():
 		gender=request.values.get('gender')
 		about=request.values.get('about')
 		age=int(age)
-		chk=isValidEmail(emailid) and isValidAge(age) and isValidName(name)
+		chk=isValidEmail(emailid) and isValidAge(age) and isValidName(name) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid or age or name')
+			return jsonify(msg='invalid emailid or age or name or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -407,9 +412,9 @@ def profilelook():
 		emailid=request.values.get('emailid')
 		lookingfor=request.values.get('lookingfor')
 		location=request.values.get('location')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -451,12 +456,12 @@ def opinion():
 		emailid=request.values.get('emailid')
 		target=request.values.get('target')
 		opinion=request.values.get('opinion')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		print (opinion)
 		if opinion not in [0,1,'0','1']:
 			return jsonify(msg="opinion must be 0 for hate and 1 for love not anything else")
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		chk=isValidEmail(target)
 		if chk==False:
 			return jsonify(msg='invalid target emailid')		
@@ -494,9 +499,9 @@ def matches():
 	try:
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')	
+			return jsonify(msg='invalid emailid or sessionid')	
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -525,6 +530,9 @@ def delete():
 	try:
 		password=request.values.get('password')
 		emailid=request.values.get('emailid')
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
+		if chk==False:
+			return jsonify(msg='invalid emailid or sessionid')
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
 			cur.execute("SELECT Password FROM Users where EmailID=?",(emailid,))
@@ -550,9 +558,9 @@ def message():
 		emailid=request.values.get('emailid')
 		reciever=request.values.get('reciever')
 		message=request.values.get('message')		
-		chk=isValidEmail(emailid) and isValidEmail(reciever)
+		chk=isValidEmail(emailid) and isValidEmail(reciever) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid or invalid recipient')
+			return jsonify(msg='invalid emailid or invalid recipient or sessionid')
 		msg="failed"
 		if emailid==reciever:
 			return jsonify(msg="Cannot send message to yourself")
@@ -566,12 +574,14 @@ def message():
 			chk = cur.fetchone()
 			if chk==None:
 				return jsonify(msg="Emailid not registered")
+			print (chk,32123,chk[0])
 			if chk[0] == sessionid :
 				timer=time.ctime()
 				cur.execute("SELECT block from Block where user=?",(emailid,))
 				ub=cur.fetchall()
 				cur.execute("SELECT block from Block where block=?",(emailid,))
 				rb=cur.fetchall()
+				print (ub,rb)
 				if ub!=[]:
 					if reciever in ub[0]:
 						return jsonify(msg="You have blocked the user")
@@ -594,9 +604,9 @@ def messageDelete():
 		emailid=request.values.get('emailid')
 		messageID=request.values.get('messageID')
 		message=request.values.get('message')		
-		chk=isValidEmail(emailid)
+		chk=isValidEmail(emailid and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid')
+			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
 		with sqlite3.connect("Tinder.db") as con:
 			cur = con.cursor()
@@ -608,13 +618,14 @@ def messageDelete():
 				timer=time.ctime()
 				cur.execute("SELECT deletion,recipient,sender from message where messageID=? and message=?",(messageID,message))
 				chk=cur.fetchone()
+				print (chk)
 				if chk==None:
 					return jsonify(msg="check for appropriate messageID and message")
 				if emailid in chk:
 					pass
 				else:
 					return jsonify("Message is not associated with this emailid")
-				if chk[0]==None:
+				if chk[0]==None or chk[0]=="":
 					info=emailid
 					cur.execute("UPDATE message SET deletion = ? WHERE messageID = ?",(info,messageID))
 					con.commit()
@@ -640,9 +651,9 @@ def block():
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
 		block=request.values.get('block')
-		chk=isValidEmail(emailid) and isValidEmail(block)
+		chk=isValidEmail(emailid) and isValidEmail(block) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid or invalid recipient')
+			return jsonify(msg='invalid emailid or invalid recipient or sessionid')
 		msg="failed"
 		if emailid==block:
 			return jsonify(msg="Cannot block yourself")
@@ -676,9 +687,9 @@ def unblock():
 		sessionid=request.values.get('sessionid')
 		emailid=request.values.get('emailid')
 		unblock=request.values.get('unblock')
-		chk=isValidEmail(emailid) and isValidEmail(unblock)
+		chk=isValidEmail(emailid) and isValidEmail(unblock) and isValidSession(sessionid)
 		if chk==False:
-			return jsonify(msg='invalid emailid or invalid recipient')
+			return jsonify(msg='invalid emailid or invalid recipient or sessionid')
 		msg="failed"
 		if emailid==unblock:
 			return jsonify(msg="Cannot block or unblock yourself")
@@ -705,6 +716,114 @@ def unblock():
 				return jsonify(msg="Account is not registered with this emailId or invalid sessionid")				
 	except:
 		return jsonify(msg="Error in api request")
+
+@app.route('/messageFetch', methods= ['GET', 'POST'])
+def messageFetch():
+	try:
+		sessionid=request.values.get('sessionid')
+		emailid=request.values.get('emailid')
+		reciever=request.values.get('reciever')
+		want=request.values.get('want')
+		chk=isValidEmail(emailid) and isValidEmail(reciever) and isValidSession(sessionid)
+		if chk==False:
+			return jsonify(msg='invalid emailid or invalid recipient or sessionid')
+		msg="failed"
+		if emailid==reciever:
+			return jsonify(msg="Cannot send message to yourself")
+		with sqlite3.connect("Tinder.db") as con:
+			cur = con.cursor()
+			cur.execute("SELECT EmailID from Users where EmailID=?",(reciever,))
+			chk=cur.fetchone()
+			if chk==None:
+				return jsonify(msg="recipient is not registered")
+			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
+			chk = cur.fetchone()
+			if chk==None:
+				return jsonify(msg="Emailid not registered")
+			if chk[0] == sessionid :
+				cur.execute("SELECT * from Message where sender=? and recipient=?",(emailid,reciever))
+				tm=cur.fetchall()
+				cur.execute("SELECT * from Message where sender=? and recipient=?",(reciever,emailid))
+				fm=cur.fetchall()
+				mIDs=[]
+				tmf=[]
+				for i in tm:
+					if i[4] in [emailid,reciever]:
+						pass
+					else:
+						tmf.append(i)
+						mIDs.append(i[5])
+				fmf=[]
+				for i in fm:
+					if i[4] in [emailid,reciever]:
+						pass
+					else:
+						fmf.append(i)
+						mIDs.append(i[5])
+				messages=tmf+fmf
+				#print (messages)
+				fmessages=[]
+				mIDs.sort()
+				print (mIDs)
+				if want is None:
+					pass
+				else:
+					l=len(mIDs)
+					if l>want:
+						return jsonify(msg="No of messages is less than what you requested")
+					else:
+						a=l-int(want)
+						mIDs=mIDs[a:]
+						print (mIDs)
+				for i in mIDs:
+					for j in messages:
+						if j[5]==i:
+							fmessages.append(j)
+				con.commit()
+				msg = "message list between " + emailid  + " and " + reciever
+				return jsonify(msg=msg,messages=fmessages)
+			else:
+				return jsonify(msg="Account is not registered with this emailId or invalid sessionid")				
+	except:
+		return jsonify(msg="Error in api request")
+
+@app.route('/connected', methods= ['GET', 'POST'])
+def connected():
+	try:
+		sessionid=request.values.get('sessionid')
+		emailid=request.values.get('emailid')
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
+		if chk==False:
+			return jsonify(msg='invalid emailid or sessionid')
+		msg="failed"
+		with sqlite3.connect("Tinder.db") as con:
+			cur = con.cursor()
+			cur.execute("SELECT SessionID from Users where EmailID=?",(emailid,))
+			chk = cur.fetchone()
+			if chk == None:
+				return jsonify(msg="Emailid is not registered")
+			if chk[0] == sessionid :
+				cur.execute("SELECT recipient from Message where sender=?",(emailid,))
+				sent=cur.fetchall()
+				cur.execute("SELECT sender from Message where recipient=?",(emailid,))
+				recieved=cur.fetchall()
+				connections=[]
+				for i in sent:
+					if i in connections:
+						pass
+					else:
+						connections.append(i)
+				for i in recieved:
+					if i in connections:
+						pass
+					else:
+						connections.append(i)
+				return jsonify(usersList=connections)
+			else:
+				return jsonify(msg="Invalid sessionid")				
+	except:
+		msg = "Emailid not registered"
+		return jsonify(msg=msg)
 
 if __name__ == '__main__':
 	app.run(debug=True,port=8080)
