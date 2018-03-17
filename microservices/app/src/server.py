@@ -67,9 +67,9 @@ def isValidAge(age):
 	return False
 
 def isValidSession(sessionid):
-if len(sessionid)==12:
-	return True
-return False
+	if len(sessionid)==12:
+		return True
+	return False
 
 UPLOAD_FOLDER = '/images'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
