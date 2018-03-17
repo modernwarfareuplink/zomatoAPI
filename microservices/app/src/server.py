@@ -604,7 +604,7 @@ def messageDelete():
 		emailid=request.values.get('emailid')
 		messageID=request.values.get('messageID')
 		message=request.values.get('message')		
-		chk=isValidEmail(emailid and isValidSession(sessionid)
+		chk=isValidEmail(emailid) and isValidSession(sessionid)
 		if chk==False:
 			return jsonify(msg='invalid emailid or sessionid')
 		msg="failed"
